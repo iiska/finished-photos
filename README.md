@@ -13,7 +13,3 @@ printed when given _--existing_.
 
 * Better digikamrc parsing. Current one is quite a kludge. Maybe KDE
   project has some Python modules already.
-* Custom actions. Print file names or copy them. Own copy operation
-  would prevent filename escaping errors when script output is used
-  with other shell tools. Eg. _$_ _cp_ _$(./finished-photos.py -e
-  tag)_ _destination_

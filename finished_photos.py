@@ -3,6 +3,7 @@
 
 import os, re
 import argparse
+import shutil
 import sqlite3
 
 def digikam_db_path():
@@ -18,6 +19,13 @@ def digikam_db_path():
                 return os.path.join(match.group(1), 'digikam4.db')
 
 
+def copy_photo(photo, dst_dir):
+    ''' Copy photo to destination if it doesn't already exist there '''
+    name = os.path.basename(photo)
+    if not os.path.exists(os.path.join(dst_dir, name)):
+        shutil.copy2(photo, dst_dir)
+
+
 def main():
     ''' Parses commandline arguments and executes db query '''
     parser = argparse.ArgumentParser(
@@ -28,6 +36,8 @@ def main():
                         help='Print photos missing processed copy')
     parser.add_argument('-e', '--existing', action="store_true",
                         help='Print existing processed copies')
+    parser.add_argument('--copy-to', metavar='DESTINATION',
+                        help='Copy existing processed photos to this directory')
 
     args = parser.parse_args()
 
@@ -46,10 +56,17 @@ def main():
         finished = os.path.join(row[0].replace('original', 'finished'),
                                 row[1][1:],
                                 row[2].replace('nef', 'jpg'))
-        if args.missing and not os.path.exists(finished):
-            print(original)
-        if args.existing and os.path.exists(finished):
-            print(finished)
+
+        if args.copy_to != None and os.path.exists(finished):
+            if os.path.exists(args.copy_to):
+                copy_photo(finished, args.copy_to)
+            else:
+                print("Destination directory %s doesn't exist" % (args.copy_to))
+        else:
+            if args.missing and not os.path.exists(finished):
+                print(original)
+            if args.existing and os.path.exists(finished):
+                print(finished)
 
 
 if __name__ == '__main__':
