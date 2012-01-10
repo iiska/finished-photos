@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
+''' Find photos from Digikam db matching given tag'''
 
-import os, re, sys
+import os, re
 import argparse
 import sqlite3
 
@@ -9,23 +10,24 @@ def digikam_db_path():
     # NOTE: Python's ConfigParser is unable to parse digikamrc because
     # it interprets [Section][Subsection] clauses as duplicate
     # sections
-    #
-    # TODO: Try to write ConfigParser subclass which could handle that
-    # and nil starting section.
     pattern = re.compile('Database Name=(.*)')
-    with open(os.path.expanduser('~/.kde/share/config/digikamrc'), 'r') as f:
-        for line in f:
-            m = pattern.match(line)
-            if m:
-                return os.path.join(m.group(1), 'digikam4.db')
+    with open(os.path.expanduser('~/.kde/share/config/digikamrc'), 'r') as conf:
+        for line in conf:
+            match = pattern.match(line)
+            if match:
+                return os.path.join(match.group(1), 'digikam4.db')
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Find processed photos for given tag name')
+    ''' Parses commandline arguments and executes db query '''
+    parser = argparse.ArgumentParser(
+        description='Find processed photos for given tag name')
     parser.add_argument('tag', metavar='TAG', nargs=1,
                         help='Find photos matching this tag')
-    parser.add_argument('-m', '--missing', action="store_true", help='Print photos missing processed copy')
-    parser.add_argument('-e', '--existing', action="store_true", help='Print existing processed copies')
+    parser.add_argument('-m', '--missing', action="store_true",
+                        help='Print photos missing processed copy')
+    parser.add_argument('-e', '--existing', action="store_true",
+                        help='Print existing processed copies')
 
     args = parser.parse_args()
 
@@ -41,7 +43,8 @@ def main():
     con = sqlite3.connect(digikam_db_path())
     for row in con.cursor().execute(query, args.tag):
         original = os.path.join(row[0], row[1][1:], row[2])
-        finished = os.path.join(row[0].replace('original', 'finished'), row[1][1:],
+        finished = os.path.join(row[0].replace('original', 'finished'),
+                                row[1][1:],
                                 row[2].replace('nef', 'jpg'))
         if args.missing and not os.path.exists(finished):
             print(original)
